@@ -52,6 +52,18 @@ Azure Function App for calculating the cost of electric vehicle (EV) journeys ba
 - .NET 8.0 SDK or later
 - Azure Functions Core Tools (for local development)
 
+### Building the Project
+
+```bash
+dotnet build
+```
+
+### Running Tests
+
+```bash
+dotnet test
+```
+
 ### Running Locally
 
 1. Navigate to the project directory:
@@ -71,11 +83,37 @@ func start
 
 The function app will start on `http://localhost:7071`
 
-### Building the Project
+### Testing the API
 
+Once the function app is running, you can test it using curl or any HTTP client:
+
+#### Health Check
 ```bash
-cd src/EvJourneyCalculator
-dotnet build
+curl http://localhost:7071/api/health
+```
+
+#### Calculate Journey Cost
+```bash
+curl -X POST http://localhost:7071/api/journey/calculate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "distanceKm": 100,
+    "electricityRatePerKwh": 0.15,
+    "vehicleEfficiencyKwhPer100Km": 18,
+    "currency": "USD"
+  }'
+```
+
+Expected response:
+```json
+{
+  "distanceKm": 100,
+  "electricityRatePerKwh": 0.15,
+  "vehicleEfficiencyKwhPer100Km": 18,
+  "energyUsedKwh": 18.00,
+  "totalCost": 2.70,
+  "currency": "USD"
+}
 ```
 
 ## Deployment
