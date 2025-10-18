@@ -1,0 +1,153 @@
+@page "/ev-journey-calculator"
+@using HowMuchIsMyEvJourneyBlazor.Models
+@rendermode InteractiveServer
+
+<PageTitle>EV Journey Calculator</PageTitle>
+
+<h1>EV Journey Cost Calculator</h1>
+
+<p>Calculate the cost of your electric vehicle journey based on battery usage and charging information.</p>
+
+<div class="row">
+    <div class="col-md-8">
+        <EditForm Model="@calculation" OnValidSubmit="@CalculateJourneyCost">
+            <DataAnnotationsValidator />
+            
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Tariff Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="offPeakTariff" class="form-label">Off-Peak Tariff (pence/kWh):</label>
+                        <InputNumber id="offPeakTariff" class="form-control" @bind-Value="calculation.OffPeakTariffPencePerKwh" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="onPeakTariff" class="form-label">On-Peak Tariff (pence/kWh):</label>
+                        <InputNumber id="onPeakTariff" class="form-control" @bind-Value="calculation.OnPeakTariffPencePerKwh" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Battery Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="batterySizeKwh" class="form-label">Battery Size (kWh):</label>
+                        <InputNumber id="batterySizeKwh" class="form-control" @bind-Value="calculation.BatterySizeKwh" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="batteryStart" class="form-label">Battery Charge at Start (%):</label>
+                        <InputNumber id="batteryStart" class="form-control" @bind-Value="calculation.BatteryChargeStartPercent" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="batteryEnd" class="form-label">Battery Charge at End (%):</label>
+                        <InputNumber id="batteryEnd" class="form-control" @bind-Value="calculation.BatteryChargeEndPercent" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Public Charging</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3 form-check">
+                        <InputCheckbox id="publicCharging" class="form-check-input" @bind-Value="calculation.ChargedAtPublicInfrastructure" />
+                        <label for="publicCharging" class="form-check-label">
+                            Charged at public infrastructure
+                        </label>
+                    </div>
+                    
+                    @if (calculation.ChargedAtPublicInfrastructure)
+                    {
+                        <div class="mb-3">
+                            <label for="publicEnergy" class="form-label">Energy Added at Public Infrastructure (kWh):</label>
+                            <InputNumber id="publicEnergy" class="form-control" @bind-Value="calculation.PublicChargingEnergyKwh" />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="publicCost" class="form-label">Cost at Public Infrastructure (pence/kWh):</label>
+                            <InputNumber id="publicCost" class="form-control" @bind-Value="calculation.PublicChargingCostPencePerKwh" />
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Calculate Journey Cost</button>
+            </div>
+        </EditForm>
+
+        @if (result != null)
+        {
+            <div class="card mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5>Journey Cost Results</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <td><strong>Total Energy Used:</strong></td>
+                                <td>@result.EnergyUsedKwh kWh</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Energy from Home Charging:</strong></td>
+                                <td>@result.EnergyFromHomeKwh kWh</td>
+                            </tr>
+                            @if (result.PublicChargingEnergyKwh > 0)
+                            {
+                                <tr>
+                                    <td><strong>Public Charging Energy:</strong></td>
+                                    <td>@result.PublicChargingEnergyKwh kWh</td>
+                                </tr>
+                            }
+                            <tr>
+                                <td><strong>Home Charging Cost:</strong></td>
+                                <td>@result.HomeChargeCostPence p</td>
+                            </tr>
+                            @if (result.PublicChargeCostPence > 0)
+                            {
+                                <tr>
+                                    <td><strong>Public Charging Cost:</strong></td>
+                                    <td>@result.PublicChargeCostPence p</td>
+                                </tr>
+                            }
+                            <tr class="table-success">
+                                <td><strong>Total Cost:</strong></td>
+                                <td><strong>£@result.TotalCostPounds</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private EvJourneyCalculation calculation = new()
+    {
+        OffPeakTariffPencePerKwh = 7.5,
+        OnPeakTariffPencePerKwh = 15.0,
+        BatterySizeKwh = 64.0,
+        BatteryChargeStartPercent = 80.0,
+        BatteryChargeEndPercent = 20.0,
+        ChargedAtPublicInfrastructure = false,
+        PublicChargingEnergyKwh = 0,
+        PublicChargingCostPencePerKwh = 0
+    };
+
+    private EvJourneyResult? result;
+
+    private void CalculateJourneyCost()
+    {
+        result = calculation.Calculate();
+    }
+}
