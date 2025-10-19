@@ -254,4 +254,90 @@ public class EvJourneyCalculationTests
         // Savings
         Assert.Equal(42.28, result.SavingsPounds);
     }
+
+    [Fact]
+    public void Calculate_WithDistanceInMiles_ConvertsCorrectly()
+    {
+        // Arrange
+        var calculation = new EvJourneyCalculation
+        {
+            OffPeakTariffPencePerKwh = 7.5,
+            OnPeakTariffPencePerKwh = 15.0,
+            BatterySizeKwh = 64.0,
+            BatteryChargeStartPercent = 80.0,
+            BatteryChargeEndPercent = 20.0,
+            ChargedAtPublicInfrastructure = false,
+            Distance = 62.1371,
+            DistanceUnit = DistanceUnit.Miles,
+            FuelEfficiencyMpg = 50.0,
+            FuelCostPerLitre = 1.45
+        };
+
+        // Act
+        var result = calculation.Calculate();
+
+        // Assert
+        // Distance in miles = 62.1371, which converts to 100km
+        // Fuel comparison: 62.1371 miles / 50 mpg = 1.24 gallons, 1.24 * 4.54609 = 5.64 litres, 5.64 * 1.45 = £8.19
+        Assert.Equal(8.19, result.FuelCostPounds);
+    }
+
+    [Fact]
+    public void Calculate_WithDistanceInKilometers_CalculatesCorrectly()
+    {
+        // Arrange
+        var calculation = new EvJourneyCalculation
+        {
+            OffPeakTariffPencePerKwh = 7.5,
+            OnPeakTariffPencePerKwh = 15.0,
+            BatterySizeKwh = 64.0,
+            BatteryChargeStartPercent = 80.0,
+            BatteryChargeEndPercent = 20.0,
+            ChargedAtPublicInfrastructure = false,
+            Distance = 100.0,
+            DistanceUnit = DistanceUnit.Kilometers,
+            FuelEfficiencyMpg = 50.0,
+            FuelCostPerLitre = 1.45
+        };
+
+        // Act
+        var result = calculation.Calculate();
+
+        // Assert
+        // EV costs
+        Assert.Equal(38.4, result.EnergyUsedKwh);
+        Assert.Equal(2.88, result.TotalCostPounds);
+        
+        // Fuel comparison: 100km = 62.14 miles, 62.14/50 = 1.24 gallons, 1.24 * 4.54609 = 5.64 litres, 5.64 * 1.45 = £8.19
+        Assert.Equal(8.19, result.FuelCostPounds);
+        
+        // Savings: £8.19 - £2.88 = £5.31
+        Assert.Equal(5.31, result.SavingsPounds);
+    }
+
+    [Fact]
+    public void Calculate_WithDistanceInMiles_50Miles_CalculatesFuelCorrectly()
+    {
+        // Arrange
+        var calculation = new EvJourneyCalculation
+        {
+            OffPeakTariffPencePerKwh = 7.5,
+            OnPeakTariffPencePerKwh = 15.0,
+            BatterySizeKwh = 64.0,
+            BatteryChargeStartPercent = 80.0,
+            BatteryChargeEndPercent = 20.0,
+            ChargedAtPublicInfrastructure = false,
+            Distance = 50.0,
+            DistanceUnit = DistanceUnit.Miles,
+            FuelEfficiencyMpg = 50.0,
+            FuelCostPerLitre = 1.50
+        };
+
+        // Act
+        var result = calculation.Calculate();
+
+        // Assert
+        // Fuel comparison: 50 miles / 50 mpg = 1.0 gallon, 1.0 * 4.54609 = 4.54609 litres, 4.54609 * 1.50 = £6.82
+        Assert.Equal(6.82, result.FuelCostPounds);
+    }
 }
