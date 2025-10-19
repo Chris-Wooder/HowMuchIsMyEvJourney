@@ -1,5 +1,11 @@
 namespace HowMuchIsMyEvJourneyBlazor.Models;
 
+public enum DistanceUnit
+{
+    Kilometers,
+    Miles
+}
+
 public class EvJourneyCalculation
 {
     public double OffPeakTariffPencePerKwh { get; set; }
@@ -10,12 +16,23 @@ public class EvJourneyCalculation
     public bool ChargedAtPublicInfrastructure { get; set; }
     public double PublicChargingEnergyKwh { get; set; }
     public double PublicChargingCostPencePerKwh { get; set; }
+    public double Distance { get; set; }
+    public DistanceUnit DistanceUnit { get; set; }
     public double DistanceKm { get; set; }
     public double FuelEfficiencyMpg { get; set; }
     public double FuelCostPerLitre { get; set; }
 
     public EvJourneyResult Calculate()
     {
+        // Convert distance to kilometers for internal calculations
+        var distanceInKm = DistanceUnit == DistanceUnit.Miles ? Distance * 1.60934 : Distance;
+        
+        // Support legacy DistanceKm property
+        if (Distance == 0 && DistanceKm > 0)
+        {
+            distanceInKm = DistanceKm;
+        }
+        
         var energyUsedKwh = ((BatteryChargeStartPercent - BatteryChargeEndPercent) / 100.0) * BatterySizeKwh;
         
         if (energyUsedKwh < 0)
@@ -38,10 +55,10 @@ public class EvJourneyCalculation
 
         // Calculate fuel comparison cost
         var fuelCostPounds = 0.0;
-        if (DistanceKm > 0 && FuelEfficiencyMpg > 0 && FuelCostPerLitre > 0)
+        if (distanceInKm > 0 && FuelEfficiencyMpg > 0 && FuelCostPerLitre > 0)
         {
             // Convert distance from km to miles
-            var distanceMiles = DistanceKm * 0.621371;
+            var distanceMiles = distanceInKm * 0.621371;
             
             // Calculate fuel needed in gallons
             var gallonsNeeded = distanceMiles / FuelEfficiencyMpg;
